@@ -12,13 +12,12 @@ def del_existing_db(db_name):
         print(f"No existing DB found: {db_name}")
 
 # Insert the data into the db by reading the csv file
-def insert_data(csv_file):
+def insert_data(csv_file, table_name, columns):
     with open(csv_file, "r") as file:
         reader = csv.DictReader(file) # Can also use pandas: pd.read_csv(file_path) & Normal: csv.reader(file)
+        inser_query = f'''Insert INTO {table_name} {columns} VALUES (?, ?, ?, ?, ?, ?)'''
         for rows in reader:
-            cursor.execute(
-                '''Insert INTO Customer (customer_id, zipcode, city, state_code, datetime_created, datetime_updated)
-                VALUES (?, ?, ?, ?, ?, ?)''',
+            cursor.execute(inser_query,
             (
                 rows["customer_id"],
                 rows["zipcode"],
@@ -28,6 +27,7 @@ def insert_data(csv_file):
                 rows["datetime_updated"]
              )
             )
+    conn.commit()
 
 # Cheking the the db available are not
 del_existing_db('tpch.db')
@@ -51,8 +51,9 @@ cursor.execute(
 )
 
 # Inserting CSV into the Table.
-insert_data("./data/customers.csv")
-
+columns = ('customer_id', 'zipcode', 'city', 'state_code', 'datetime_created', 'datetime_updated')
+insert_data("./data/customers.csv", "Customer", columns)
+conn.commit()
 # Close the DB connection
 conn.close()
 print("Created Table and Inserted the data.")
@@ -60,7 +61,7 @@ print("Created Table and Inserted the data.")
 import duckdb
 
 # duckDB connection
-duckdb_conn = duckdb.connect("ducdb.db")
+duckdb_conn = duckdb.connect("duckdb.db")
 
 # Create the Customers tables
 duckdb_conn.execute("DROP TABLE IF EXISTS Customer")
@@ -98,16 +99,33 @@ CREATE TABLE IF NOT EXISTS WeatherData (
 duckdb_conn.execute("DROP TABLE IF EXISTS Exchanges")
 duckdb_conn.execute(
     """
-CREATE TABLE IF NOT EXISTS Exchanges (
+CREATE TABLE Exchanges (
     id TEXT,
+    symbol TEXT,
     name TEXT,
-    rank INTEGER,
-    percentTotalVolume FLOAT,
-    volumeUsd FLOAT,
-    tradingPairs TEXT,
-    socket BOOLEAN,
-    exchangeUrl TEXT,
-    updated BIGINT 
+    image TEXT,
+    current_price DOUBLE,
+    market_cap BIGINT,
+    market_cap_rank INTEGER,
+    fully_diluted_valuation BIGINT,
+    total_volume BIGINT,
+    high_24h DOUBLE,
+    low_24h DOUBLE,
+    price_change_24h DOUBLE,
+    price_change_percentage_24h DOUBLE,
+    market_cap_change_24h BIGINT,
+    market_cap_change_percentage_24h DOUBLE,
+    circulating_supply DOUBLE,
+    total_supply DOUBLE,
+    max_supply DOUBLE,
+    ath DOUBLE,
+    ath_change_percentage DOUBLE,
+    ath_date TEXT,
+    atl DOUBLE,
+    atl_change_percentage DOUBLE,
+    atl_date TEXT,
+    roi JSON,
+    last_updated TEXT
 )
 """
 )
